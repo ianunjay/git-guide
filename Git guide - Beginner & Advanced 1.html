@@ -1,0 +1,2148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Git guide — Beginner &amp; Advanced</title>
+  <script>
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem('gitguide-theme'); } catch (e) {}
+      if (!t) t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f8f7f5;
+      --surface: #ffffff;
+      --surface-alt: #f2f1ef;
+      --border: #e4e2dd;
+      --text: #1a1916;
+      --text-secondary: #6b6860;
+      --text-muted: #9e9c97;
+      --accent: #2563eb;
+      --accent-bg: #eff6ff;
+      --accent-border: #bfdbfe;
+      --accent-text: #1d4ed8;
+      --success-bg: #f0fdf4;
+      --success-text: #166534;
+      --danger-bg: #fef2f2;
+      --danger-text: #991b1b;
+      --danger-border: #fecaca;
+      --warning-bg: #fffbeb;
+      --warning-text: #92400e;
+      --pro-bg: #f5f3ff;
+      --pro-text: #5b21b6;
+      --radius: 8px;
+      --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 1rem;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .sidebar-logo {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      padding-left: 0.5rem;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      transition: background 0.12s, color 0.12s;
+    }
+
+    .nav-item:hover { background: var(--surface-alt); color: var(--text); }
+
+    .nav-item.active {
+      background: var(--accent-bg);
+      color: var(--accent-text);
+      font-weight: 500;
+    }
+
+    .nav-icon {
+      width: 16px;
+      height: 16px;
+      opacity: 0.7;
+      flex-shrink: 0;
+    }
+
+    .nav-item.active .nav-icon { opacity: 1; }
+
+    /* Main */
+    .main {
+      flex: 1;
+      padding: 2.5rem 3rem;
+      max-width: 780px;
+    }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* Section header */
+    .section-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 0.75rem;
+    }
+
+    .tag-setup { background: var(--success-bg); color: var(--success-text); }
+    .tag-daily { background: var(--accent-bg); color: var(--accent-text); }
+    .tag-branch { background: var(--pro-bg); color: var(--pro-text); }
+    .tag-conflict { background: var(--danger-bg); color: var(--danger-text); }
+    .tag-undo { background: var(--warning-bg); color: var(--warning-text); }
+    .tag-ref { background: var(--surface-alt); color: var(--text-secondary); }
+
+    .section-intro {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 1.75rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1rem;
+    }
+
+    h2 {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 1.5rem 0 0.4rem;
+    }
+
+    p { color: var(--text-secondary); font-size: 14px; margin-bottom: 0.5rem; }
+
+    /* Code blocks */
+    .cmd-block {
+      background: #1e1e2e;
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      margin: 0.5rem 0 1.25rem;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.7;
+      overflow-x: auto;
+    }
+
+    .cmd-block .comment { color: #6c7086; display: block; }
+    .cmd-block .cmd { color: #89b4fa; display: block; }
+    .cmd-block .note {
+      color: #a6adc8;
+      font-family: var(--sans);
+      font-size: 12px;
+      margin-top: 8px;
+      display: block;
+      border-top: 1px solid #313244;
+      padding-top: 7px;
+    }
+
+    /* Conflict markers */
+    .conflict-file {
+      background: #1e1e2e;
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      margin: 0.5rem 0 1.25rem;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .cf-ours { color: #f38ba8; }
+    .cf-divider { color: #6c7086; }
+    .cf-theirs { color: #a6e3a1; }
+    .cf-code { color: #cdd6f4; }
+
+    /* Scenario cards */
+    .scenario {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.1rem 1.25rem;
+      margin-bottom: 1rem;
+      background: var(--surface);
+    }
+
+    .scenario-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 5px;
+    }
+
+    .scenario-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 0.75rem;
+    }
+
+    .scenario .cmd-block { margin-bottom: 0; }
+
+    /* Callouts */
+    .callout {
+      border-left: 3px solid var(--accent-border);
+      background: var(--accent-bg);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 10px 14px;
+      margin: 0.75rem 0 1rem;
+      font-size: 13px;
+      color: var(--accent-text);
+    }
+
+    .callout strong { color: var(--accent-text); font-weight: 600; }
+
+    .danger-callout {
+      border-left: 3px solid var(--danger-border);
+      background: var(--danger-bg);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 10px 14px;
+      margin: 0.75rem 0 1rem;
+      font-size: 13px;
+      color: var(--danger-text);
+    }
+
+    .danger-callout strong { color: var(--danger-text); font-weight: 600; }
+
+    /* Flow */
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin: 0.5rem 0 1.25rem;
+    }
+
+    .flow-step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 5px 12px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-family: var(--mono);
+    }
+
+    .flow-arrow { color: var(--text-muted); font-size: 16px; }
+
+    /* Cheat sheet table */
+    .cheat-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 0.5rem;
+    }
+
+    .cheat-table th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .cheat-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .cheat-table tr:last-child td { border-bottom: none; }
+    .cheat-table tr:hover td { background: var(--surface-alt); }
+
+    .cheat-table td:first-child { color: var(--text-secondary); width: 50%; }
+    .cheat-table td:last-child { font-family: var(--mono); color: var(--accent-text); font-size: 12px; }
+
+    .cheat-section-row td {
+      padding: 14px 12px 4px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: none;
+      background: none !important;
+    }
+
+    code {
+      font-family: var(--mono);
+      font-size: 12px;
+      background: var(--surface-alt);
+      color: var(--accent-text);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    /* Mobile */
+    @media (max-width: 640px) {
+      .sidebar {
+        display: none;
+      }
+      .main {
+        padding: 1.5rem 1.25rem;
+      }
+      .mobile-nav {
+        display: flex !important;
+      }
+    }
+
+    .mobile-nav {
+      display: none;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+
+    .mobile-nav button {
+      padding: 6px 12px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .mobile-nav button.active {
+      background: var(--accent-bg);
+      color: var(--accent-text);
+      border-color: var(--accent-border);
+      font-weight: 500;
+    }
+  
+    /* ---------- Mode toggle (Beginner / Advanced) ---------- */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar-title { font-size: 13px; color: var(--text-muted); }
+    .topbar-title strong { color: var(--text); font-weight: 600; }
+    .topbar-controls { display: flex; align-items: center; gap: 8px; }
+    .mode-toggle {
+      display: inline-flex;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 3px;
+    }
+    .mode-toggle button {
+      border: none;
+      background: none;
+      padding: 6px 18px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s, box-shadow 0.12s;
+    }
+    .mode-toggle button:hover { color: var(--text); }
+    .mode-toggle button.active {
+      background: var(--surface);
+      box-shadow: 0 1px 2px var(--shadow);
+    }
+    .mode-toggle button.active[data-mode="beginner"] { color: var(--accent-text); }
+    .mode-toggle button.active[data-mode="advanced"] { color: var(--pro-text); }
+
+    /* ---------- Night mode toggle ---------- */
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, transform 0.2s;
+    }
+    .theme-toggle:hover { color: var(--text); background: var(--surface); }
+    .theme-toggle:active { transform: scale(0.94); }
+    .theme-toggle svg { width: 17px; height: 17px; }
+    .theme-toggle .icon-sun { display: none; }
+    html[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+    html[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+
+    /* Smooth theme switch */
+    body, .sidebar, .scenario, .nav-item, .flow-step, .filter-input, .mobile-nav button,
+    .callout, .danger-callout, .warn-callout, .pro-callout, code, .section-tag {
+      transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    }
+
+    /* Sidebar grouping */
+    .nav-group { display: none; flex-direction: column; gap: 2px; }
+    .nav-group.visible { display: flex; }
+    .sidebar-mode {
+      display: inline-block;
+      margin-left: 6px;
+      font-size: 10px;
+      padding: 1px 7px;
+      border-radius: 20px;
+      background: var(--accent-bg);
+      color: var(--accent-text);
+      letter-spacing: 0.06em;
+    }
+    body.mode-advanced .sidebar-mode { background: var(--pro-bg); color: var(--pro-text); }
+    body.mode-advanced .nav-item.active { background: var(--pro-bg); color: var(--pro-text); }
+    body.mode-advanced .mobile-nav button.active {
+      background: var(--pro-bg); color: var(--pro-text); border-color: var(--pro-border);
+    }
+
+    /* Extra tags */
+    .tag-error { background: var(--danger-bg); color: var(--danger-text); }
+    .tag-adv { background: var(--pro-bg); color: var(--pro-text); }
+
+    /* Error output lines inside code blocks */
+    .cmd-block .err { color: #f38ba8; display: block; }
+    .cmd-block .out { color: #a6e3a1; display: block; }
+    .cmd-block .plain { color: #cdd6f4; display: block; }
+    .cmd-block .step { color: #f9e2af; display: block; margin-top: 6px; }
+    .cmd-block .step:first-child { margin-top: 0; }
+
+    /* Scenario extras */
+    .scenario-why {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin: -0.25rem 0 0.75rem;
+    }
+    .scenario-why strong { color: var(--text-secondary); font-weight: 600; }
+    .scenario-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 1px 7px;
+      border-radius: 20px;
+      margin-left: 6px;
+      vertical-align: 2px;
+    }
+    .badge-safe { background: var(--success-bg); color: var(--success-text); }
+    .badge-risky { background: var(--danger-bg); color: var(--danger-text); }
+    .badge-common { background: var(--accent-bg); color: var(--accent-text); }
+
+    .warn-callout {
+      border-left: 3px solid var(--warning-border);
+      background: var(--warning-bg);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 10px 14px;
+      margin: 0.75rem 0 1rem;
+      font-size: 13px;
+      color: var(--warning-text);
+    }
+    .warn-callout strong { font-weight: 600; }
+    .pro-callout {
+      border-left: 3px solid var(--pro-border);
+      background: var(--pro-bg);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 10px 14px;
+      margin: 0.75rem 0 1rem;
+      font-size: 13px;
+      color: var(--pro-text);
+    }
+    .pro-callout strong { font-weight: 600; }
+    .inline-link { color: var(--accent-text); }
+
+    /* Filter */
+    .filter-input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      font-family: var(--sans);
+      font-size: 14px;
+      color: var(--text);
+      margin-bottom: 1rem;
+      outline: none;
+    }
+    .filter-input::placeholder { color: var(--text-muted); }
+    .filter-input:focus { border-color: var(--accent-border); box-shadow: 0 0 0 3px var(--accent-bg); }
+    body.mode-advanced .filter-input:focus { border-color: var(--pro-border); box-shadow: 0 0 0 3px var(--pro-bg); }
+    .filter-empty { display: none; font-size: 13px; color: var(--text-muted); padding: 0.5rem 0 1rem; }
+
+    /* Compare table */
+    .compare-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 0.5rem 0 1.25rem; }
+    .compare-table th {
+      text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.07em;
+      text-transform: uppercase; color: var(--text-muted); padding: 8px 12px; border-bottom: 1px solid var(--border);
+    }
+    .compare-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: top; }
+    .compare-table tr:last-child td { border-bottom: none; }
+    .compare-table td:first-child { font-family: var(--mono); font-size: 12px; color: var(--pro-text); white-space: nowrap; }
+    .compare-table td.yes { color: var(--success-text); font-weight: 600; }
+    .compare-table td.no { color: var(--danger-text); font-weight: 600; }
+
+    body.mode-advanced .cheat-table td:last-child { color: var(--pro-text); }
+
+    /* Layout safety */
+    .main { min-width: 0; }
+    .cheat-table td:last-child { word-break: break-word; }
+    @media (max-width: 640px) {
+      .compare-table, .cheat-table { display: block; overflow-x: auto; }
+      .conflict-file { overflow-x: auto; white-space: nowrap; }
+    }
+
+    /* ---------- Light-mode tokens added for new components ---------- */
+    :root {
+      --pro-border: #ddd6fe;
+      --warning-border: #fde68a;
+      --shadow: rgba(0,0,0,0.08);
+      color-scheme: light;
+    }
+
+    /* ---------- NIGHT MODE ---------- */
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #11111b;
+      --surface: #181825;
+      --surface-alt: #232336;
+      --border: #2e2e44;
+      --text: #e4e4f0;
+      --text-secondary: #a8a8c0;
+      --text-muted: #72728c;
+      --accent: #89b4fa;
+      --accent-bg: rgba(137,180,250,0.12);
+      --accent-border: rgba(137,180,250,0.40);
+      --accent-text: #93bbfc;
+      --success-bg: rgba(166,227,161,0.12);
+      --success-text: #a6e3a1;
+      --danger-bg: rgba(243,139,168,0.12);
+      --danger-text: #f5a3ba;
+      --danger-border: rgba(243,139,168,0.45);
+      --warning-bg: rgba(249,226,175,0.10);
+      --warning-text: #f9e2af;
+      --warning-border: rgba(249,226,175,0.40);
+      --pro-bg: rgba(203,166,247,0.13);
+      --pro-text: #cba6f7;
+      --pro-border: rgba(203,166,247,0.40);
+      --shadow: rgba(0,0,0,0.45);
+    }
+    /* Code blocks sit one step darker than the surface so they still stand out */
+    html[data-theme="dark"] .cmd-block,
+    html[data-theme="dark"] .conflict-file {
+      background: #0b0b13;
+      border: 1px solid var(--border);
+    }
+    html[data-theme="dark"] .cmd-block .note { border-top-color: #25253a; }
+    html[data-theme="dark"] .scenario { background: var(--surface); }
+    html[data-theme="dark"] .cheat-table tr:hover td { background: var(--surface-alt); }
+    html[data-theme="dark"] ::-webkit-scrollbar { width: 10px; height: 10px; }
+    html[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #2e2e44; border-radius: 10px; }
+    html[data-theme="dark"] ::-webkit-scrollbar-track { background: transparent; }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo">Git guide<span class="sidebar-mode" id="sidebar-mode">Beginner</span></div>
+    <div class="nav-group" data-mode="beginner">
+      <button class="nav-item" data-target="setup" data-short="Setup" onclick="show('setup')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Setup
+      </button>
+      <button class="nav-item" data-target="basics" data-short="Daily" onclick="show('basics')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/><line x1="12" y1="2" x2="12" y2="10"/><line x1="12" y1="14" x2="12" y2="22"/></svg>
+        Daily basics
+      </button>
+      <button class="nav-item" data-target="branches" data-short="Branches" onclick="show('branches')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+        Branches
+      </button>
+      <button class="nav-item" data-target="conflicts" data-short="Conflicts" onclick="show('conflicts')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Conflicts
+      </button>
+      <button class="nav-item" data-target="undo" data-short="Undo" onclick="show('undo')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+        Undo things
+      </button>
+      <button class="nav-item" data-target="errors" data-short="Errors" onclick="show('errors')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        Fix errors
+      </button>
+      <button class="nav-item" data-target="cheatsheet" data-short="Cheat sheet" onclick="show('cheatsheet')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Cheat sheet
+      </button>
+    </div>
+    <div class="nav-group" data-mode="advanced">
+      <button class="nav-item" data-target="rebase" data-short="Rebase" onclick="show('rebase')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="12" r="3"/><path d="M6 9v6M9 6h3a3 3 0 0 1 3 3v0"/></svg>
+        Rebase &amp; history
+      </button>
+      <button class="nav-item" data-target="recovery" data-short="Recovery" onclick="show('recovery')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><polyline points="3 3 3 8 8 8"/><polyline points="12 7 12 12 15 15"/></svg>
+        Recovery &amp; reflog
+      </button>
+      <button class="nav-item" data-target="remotes" data-short="Remotes" onclick="show('remotes')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+        Remotes &amp; tags
+      </button>
+      <button class="nav-item" data-target="stashpick" data-short="Stash/pick" onclick="show('stashpick')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="6" rx="1"/><rect x="3" y="14" width="18" height="6" rx="1"/></svg>
+        Stash &amp; cherry-pick
+      </button>
+      <button class="nav-item" data-target="debug" data-short="Debug" onclick="show('debug')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Debug &amp; search
+      </button>
+      <button class="nav-item" data-target="scale" data-short="Scale" onclick="show('scale')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Worktrees &amp; scale
+      </button>
+      <button class="nav-item" data-target="config" data-short="Config" onclick="show('config')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+        Config &amp; aliases
+      </button>
+      <button class="nav-item" data-target="advscenarios" data-short="Scenarios" onclick="show('advscenarios')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Scenarios
+      </button>
+      <button class="nav-item" data-target="advcheatsheet" data-short="Cheat sheet" onclick="show('advcheatsheet')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Cheat sheet
+      </button>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title"><strong>Git guide</strong> · pick your level</div>
+      <div class="topbar-controls">
+        <div class="mode-toggle" role="tablist" aria-label="Guide level">
+          <button data-mode="beginner" role="tab" onclick="setMode('beginner')">Beginner</button>
+          <button data-mode="advanced" role="tab" onclick="setMode('advanced')">Advanced</button>
+        </div>
+        <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle night mode" title="Toggle night mode (N)">
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="mobile-nav" id="mobile-nav"></div>
+
+    <!-- Setup -->
+    <div id="setup" class="section" data-mode="beginner">
+      <div class="section-tag tag-setup">Initial setup</div>
+      <h2>Setup</h2>
+      <p class="section-intro">One-time configuration before you do anything else.</p>
+
+      <h3>Tell Git who you are</h3>
+      <p>Your name and email appear in every commit you make.</p>
+      <div class="cmd-block">
+        <span class="cmd">git config --global user.name "Your Name"</span>
+        <span class="cmd">git config --global user.email "you@example.com"</span>
+      </div>
+
+      <h3>Start a new repo on your machine</h3>
+      <div class="cmd-block">
+        <span class="comment"># Navigate into your project folder first, then:</span>
+        <span class="cmd">git init</span>
+        <span class="note">Creates a hidden .git folder — this is what makes a folder a Git repo.</span>
+      </div>
+
+      <h3>Clone an existing repo from GitHub / GitLab</h3>
+      <div class="cmd-block">
+        <span class="comment"># Downloads the repo into a new folder on your computer</span>
+        <span class="cmd">git clone https://github.com/username/repo-name.git</span>
+        <span class="note">This creates a new folder named repo-name in your current directory.</span>
+      </div>
+
+      <div class="callout"><strong>Tip:</strong> After cloning, you already have a remote called <code>origin</code> pointing to that URL. No extra setup needed.</div>
+
+      <h3>Connect a local repo to GitHub (if you used <code>git init</code>)</h3>
+      <div class="cmd-block">
+        <span class="cmd">git remote add origin https://github.com/username/repo-name.git</span>
+        <span class="cmd">git branch -M main</span>
+        <span class="cmd">git push -u origin main</span>
+        <span class="note">The -u flag sets origin/main as the default, so future pushes just need: git push</span>
+      </div>
+      <div class="callout"><strong>Getting "src refspec main does not match any"?</strong> You haven't committed yet — run <code>git add .</code> and <code>git commit -m "Initial commit"</code> before pushing. More in the <a href="#" class="inline-link" onclick="show('errors');return false;">Fix errors</a> tab.</div>
+    </div>
+
+    <!-- Daily basics -->
+    <div id="basics" class="section" data-mode="beginner">
+      <div class="section-tag tag-daily">Daily workflow</div>
+      <h2>Daily basics</h2>
+      <p class="section-intro">The cycle you'll repeat every day.</p>
+
+      <div class="flow">
+        <span class="flow-step">Edit files</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">git add</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">git commit</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">git push</span>
+      </div>
+
+      <h3>Check what's changed</h3>
+      <div class="cmd-block">
+        <span class="comment"># See which files have changed, are staged, or are new</span>
+        <span class="cmd">git status</span>
+        <span class="comment"># See the actual line-by-line changes</span>
+        <span class="cmd">git diff</span>
+      </div>
+
+      <h3>Stage your changes (<code>git add</code>)</h3>
+      <p>Staging means telling Git "include these changes in the next commit."</p>
+      <div class="cmd-block">
+        <span class="comment"># Stage one specific file</span>
+        <span class="cmd">git add path/to/file.txt</span>
+        <span class="comment"># Stage multiple specific files</span>
+        <span class="cmd">git add src/app.js src/utils.js</span>
+        <span class="comment"># Stage ALL changed files at once</span>
+        <span class="cmd">git add .</span>
+      </div>
+
+      <h3>Commit your changes</h3>
+      <div class="cmd-block">
+        <span class="comment"># Save staged changes with a message</span>
+        <span class="cmd">git commit -m "Add login button to homepage"</span>
+        <span class="comment"># Stage all tracked files AND commit in one step</span>
+        <span class="cmd">git commit -am "Fix typo in readme"</span>
+        <span class="note">-am only stages files Git already tracks — new files still need git add first.</span>
+      </div>
+
+      <h3>Push to remote</h3>
+      <div class="cmd-block">
+        <span class="comment"># Upload your commits to GitHub/GitLab</span>
+        <span class="cmd">git push</span>
+        <span class="comment"># First push of a new branch</span>
+        <span class="cmd">git push -u origin branch-name</span>
+      </div>
+
+      <h3>Pull from remote</h3>
+      <div class="cmd-block">
+        <span class="comment"># Download and merge remote changes into your current branch</span>
+        <span class="cmd">git pull</span>
+        <span class="comment"># Pull from a specific branch</span>
+        <span class="cmd">git pull origin main</span>
+      </div>
+
+      <h3>See commit history</h3>
+      <div class="cmd-block">
+        <span class="comment"># Full log</span>
+        <span class="cmd">git log</span>
+        <span class="comment"># Compact one-line-per-commit view</span>
+        <span class="cmd">git log --oneline</span>
+      </div>
+    </div>
+
+    <!-- Branches -->
+    <div id="branches" class="section" data-mode="beginner">
+      <div class="section-tag tag-branch">Branches</div>
+      <h2>Branches</h2>
+      <p class="section-intro">Branches let you work on features without touching the main code.</p>
+
+      <h3>List and create branches</h3>
+      <div class="cmd-block">
+        <span class="comment"># See all local branches (* = current)</span>
+        <span class="cmd">git branch</span>
+        <span class="comment"># See all branches including remote</span>
+        <span class="cmd">git branch -a</span>
+        <span class="comment"># Create a new branch</span>
+        <span class="cmd">git branch feature/my-feature</span>
+        <span class="comment"># Create AND switch to it in one step (recommended)</span>
+        <span class="cmd">git checkout -b feature/my-feature</span>
+      </div>
+
+      <h3>Switch branches</h3>
+      <div class="cmd-block">
+        <span class="cmd">git checkout main</span>
+        <span class="comment"># Modern alternative (Git 2.23+)</span>
+        <span class="cmd">git switch main</span>
+      </div>
+
+      <h3>Merge a branch into main</h3>
+      <div class="cmd-block">
+        <span class="comment"># Step 1: switch to the branch you want to merge INTO</span>
+        <span class="cmd">git checkout main</span>
+        <span class="comment"># Step 2: merge your feature branch in</span>
+        <span class="cmd">git merge feature/my-feature</span>
+      </div>
+
+      <h3>Delete a branch</h3>
+      <div class="cmd-block">
+        <span class="comment"># Delete a local branch (after merging)</span>
+        <span class="cmd">git branch -d feature/my-feature</span>
+        <span class="comment"># Force delete (even if not merged)</span>
+        <span class="cmd">git branch -D feature/my-feature</span>
+        <span class="comment"># Delete a remote branch</span>
+        <span class="cmd">git push origin --delete feature/my-feature</span>
+      </div>
+
+      <div class="callout"><strong>Best practice:</strong> Always make a new branch for each feature or bug fix. Keep <code>main</code> clean and stable.</div>
+    </div>
+
+    <!-- Conflicts -->
+    <div id="conflicts" class="section" data-mode="beginner">
+      <div class="section-tag tag-conflict">Conflict resolution</div>
+      <h2>Conflicts</h2>
+      <p class="section-intro">Conflicts happen when two people edit the same line. Git asks you to choose which version to keep.</p>
+
+      <h3>What a conflict looks like inside a file</h3>
+      <div class="conflict-file">
+        <span class="cf-ours">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD  (your local changes)</span><br>
+        <span class="cf-code">const greeting = "Hello World";</span><br>
+        <span class="cf-divider">=======</span><br>
+        <span class="cf-code">const greeting = "Hi there";</span><br>
+        <span class="cf-theirs">&gt;&gt;&gt;&gt;&gt;&gt;&gt; origin/main  (remote changes)</span>
+      </div>
+      <p>Delete the marker lines and keep whichever version you want, then save the file.</p>
+
+      <h3>Scenarios</h3>
+
+      <div class="scenario">
+        <div class="scenario-title">1 — Keep the remote version of a specific file</div>
+        <div class="scenario-desc">You want GitHub's version of one file and don't care about your local changes to it.</div>
+        <div class="cmd-block">
+          <span class="comment"># Accept the remote (their) version</span>
+          <span class="cmd">git checkout --theirs path/to/conflicted-file.js</span>
+          <span class="cmd">git add path/to/conflicted-file.js</span>
+          <span class="cmd">git commit -m "Resolve conflict: keep remote version"</span>
+        </div>
+      </div>
+
+      <div class="scenario">
+        <div class="scenario-title">2 — Keep your local version of a specific file</div>
+        <div class="scenario-desc">You want to keep what you had locally and discard the incoming remote changes for that file.</div>
+        <div class="cmd-block">
+          <span class="comment"># Accept your (ours) version</span>
+          <span class="cmd">git checkout --ours path/to/conflicted-file.js</span>
+          <span class="cmd">git add path/to/conflicted-file.js</span>
+          <span class="cmd">git commit -m "Resolve conflict: keep local version"</span>
+        </div>
+      </div>
+
+      <div class="scenario">
+        <div class="scenario-title">3 — Manually pick lines from each version</div>
+        <div class="scenario-desc">Open the file, edit it to the final result you want, remove all conflict markers, then:</div>
+        <div class="cmd-block">
+          <span class="cmd">git add path/to/conflicted-file.js</span>
+          <span class="cmd">git commit -m "Resolve conflict in file.js"</span>
+        </div>
+      </div>
+
+      <div class="scenario">
+        <div class="scenario-title">4 — Abandon a merge entirely</div>
+        <div class="scenario-desc">You started merging but want to go back to before the conflict happened.</div>
+        <div class="cmd-block">
+          <span class="cmd">git merge --abort</span>
+        </div>
+      </div>
+
+      <div class="scenario">
+        <div class="scenario-title">5 — See which files have conflicts</div>
+        <div class="cmd-block">
+          <span class="cmd">git status</span>
+          <span class="note">Files listed as "both modified" are the conflicted ones. Resolve each one, git add it, then commit once at the end.</span>
+        </div>
+      </div>
+
+      <div class="callout"><strong>Golden rule:</strong> after resolving all conflicts, run <code>git status</code> and confirm there are no more "both modified" files before committing.</div>
+    </div>
+
+    <!-- Undo -->
+    <div id="undo" class="section" data-mode="beginner">
+      <div class="section-tag tag-undo">Undo things</div>
+      <h2>Undo things</h2>
+      <p class="section-intro">Git makes it safe to undo almost anything — as long as you haven't pushed yet.</p>
+
+      <h3>Discard changes in a file (not staged yet)</h3>
+      <div class="cmd-block">
+        <span class="comment"># Throw away unsaved edits in one file (permanent)</span>
+        <span class="cmd">git checkout -- path/to/file.txt</span>
+      </div>
+
+      <h3>Unstage a file (undo <code>git add</code>)</h3>
+      <div class="cmd-block">
+        <span class="comment"># Remove from staging without losing your edits</span>
+        <span class="cmd">git restore --staged path/to/file.txt</span>
+      </div>
+
+      <h3>Undo the last commit (keep your changes)</h3>
+      <div class="cmd-block">
+        <span class="comment"># Move the commit back to staging — edits are still there</span>
+        <span class="cmd">git reset --soft HEAD~1</span>
+      </div>
+
+      <h3>Fix a commit message</h3>
+      <div class="cmd-block">
+        <span class="comment"># Edit the most recent commit message (before pushing!)</span>
+        <span class="cmd">git commit --amend -m "Corrected commit message"</span>
+      </div>
+
+      <h3>Stash work in progress</h3>
+      <p>Temporarily shelve changes so you can switch branches cleanly.</p>
+      <div class="cmd-block">
+        <span class="cmd">git stash</span>
+        <span class="comment"># Get them back later</span>
+        <span class="cmd">git stash pop</span>
+        <span class="comment"># See all stashes</span>
+        <span class="cmd">git stash list</span>
+      </div>
+
+      <div class="danger-callout"><strong>Warning:</strong> <code>git reset --hard</code> permanently deletes uncommitted changes. Never run it unless you're certain. When in doubt, use <code>--soft</code> instead.</div>
+    </div>
+
+        <!-- Fix errors (Beginner) -->
+    <div id="errors" class="section" data-mode="beginner">
+      <div class="section-tag tag-error">Troubleshooting</div>
+      <h2>Fix common errors</h2>
+      <p class="section-intro">Paste or type part of the error you're seeing — the matching fix will show up below.</p>
+
+      <input class="filter-input" type="text" placeholder="Filter errors… e.g. refspec, rejected, password, upstream" oninput="filterCards(this, 'errors')" />
+      <div class="filter-empty">No matching error. Try a shorter keyword like <code>push</code> or <code>merge</code>.</div>
+
+      <h3>The first-push checklist</h3>
+      <p>Most first-push errors come from skipping one of these steps. Run them in order:</p>
+      <div class="flow">
+        <span class="flow-step">git init</span><span class="flow-arrow">→</span>
+        <span class="flow-step">git add .</span><span class="flow-arrow">→</span>
+        <span class="flow-step">git commit</span><span class="flow-arrow">→</span>
+        <span class="flow-step">git branch -M main</span><span class="flow-arrow">→</span>
+        <span class="flow-step">git remote add origin</span><span class="flow-arrow">→</span>
+        <span class="flow-step">git push -u origin main</span>
+      </div>
+
+      <div class="scenario" data-filter="src refspec main does not match any failed to push some refs master first commit">
+        <div class="scenario-title">error: src refspec main does not match any <span class="scenario-badge badge-common">Very common</span></div>
+        <div class="cmd-block">
+          <span class="err">error: src refspec main does not match any</span>
+          <span class="err">error: failed to push some refs to 'https://github.com/you/repo.git'</span>
+        </div>
+        <div class="scenario-desc">Git can't find a local branch named <code>main</code>. Either your branch is still called <code>master</code> (older Git default), or you haven't made your first commit yet — a branch doesn't technically exist until it has a commit.</div>
+        <div class="cmd-block">
+          <span class="step">1 — Stage and commit your files (makes sure there's something to push)</span>
+          <span class="cmd">git add .</span>
+          <span class="cmd">git commit -m "Initial commit"</span>
+          <span class="step">2 — Rename your current branch to main</span>
+          <span class="cmd">git branch -M main</span>
+          <span class="step">3 — Push again</span>
+          <span class="cmd">git push -u origin main</span>
+          <span class="note">If step 1 says "nothing to commit", that's fine — you already committed (e.g. via the VS Code Source Control panel). Check your branch name anytime with: git branch</span>
+        </div>
+        <div class="callout"><strong>Prevent it forever:</strong> <code>git config --global init.defaultBranch main</code> — every new repo you <code>git init</code> will start on <code>main</code>.</div>
+      </div>
+
+      <div class="scenario" data-filter="updates were rejected because the remote contains work that you do not have locally fetch first non-fast-forward rejected tip of your current branch is behind">
+        <div class="scenario-title">Updates were rejected — remote contains work you don't have <span class="scenario-badge badge-common">Very common</span></div>
+        <div class="cmd-block">
+          <span class="err">! [rejected]  main -&gt; main (fetch first)</span>
+          <span class="err">hint: Updates were rejected because the remote contains work that you do not have locally.</span>
+        </div>
+        <div class="scenario-desc">GitHub has commits you don't — a README/License created on GitHub, or a teammate (or you, from another machine) pushed first. Bring those in, then push.</div>
+        <div class="cmd-block">
+          <span class="comment"># Replay your commits on top of what's on GitHub (clean, linear history)</span>
+          <span class="cmd">git pull origin main --rebase</span>
+          <span class="cmd">git push</span>
+          <span class="note">If the pull stops with conflicts, fix them (see the Conflicts tab), then run: git add &lt;file&gt; → git rebase --continue → git push</span>
+        </div>
+        <div class="danger-callout"><strong>Don't reach for</strong> <code>git push --force</code> here — it would delete whatever is on GitHub that you don't have locally.</div>
+      </div>
+
+      <div class="scenario" data-filter="fatal refusing to merge unrelated histories readme license github created">
+        <div class="scenario-title">fatal: refusing to merge unrelated histories</div>
+        <div class="cmd-block">
+          <span class="err">fatal: refusing to merge unrelated histories</span>
+        </div>
+        <div class="scenario-desc">You ran <code>git init</code> locally <em>and</em> created the repo on GitHub with a README. The two histories have no commit in common, so Git refuses to join them by default.</div>
+        <div class="cmd-block">
+          <span class="comment"># Tell Git it's OK to combine the two histories</span>
+          <span class="cmd">git pull origin main --allow-unrelated-histories</span>
+          <span class="comment"># Resolve any conflicts (often README.md), commit, then push</span>
+          <span class="cmd">git push -u origin main</span>
+          <span class="note">Next time: create the GitHub repo empty (no README / .gitignore / License) when you already have local code.</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="error remote origin already exists wrong url change remote">
+        <div class="scenario-title">error: remote origin already exists</div>
+        <div class="cmd-block">
+          <span class="err">error: remote origin already exists.</span>
+        </div>
+        <div class="scenario-desc">You already linked this folder to a remote. Check where it points, then update it instead of adding it again.</div>
+        <div class="cmd-block">
+          <span class="comment"># See current remotes</span>
+          <span class="cmd">git remote -v</span>
+          <span class="comment"># Point origin at the correct URL</span>
+          <span class="cmd">git remote set-url origin https://github.com/username/repo-name.git</span>
+          <span class="comment"># …or remove it and add it fresh</span>
+          <span class="cmd">git remote remove origin</span>
+          <span class="cmd">git remote add origin https://github.com/username/repo-name.git</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="fatal the current branch has no upstream branch set-upstream push new branch">
+        <div class="scenario-title">fatal: The current branch has no upstream branch</div>
+        <div class="cmd-block">
+          <span class="err">fatal: The current branch feature/login has no upstream branch.</span>
+        </div>
+        <div class="scenario-desc">This is a new local branch that GitHub doesn't know about yet. Push it once with <code>-u</code> to link them.</div>
+        <div class="cmd-block">
+          <span class="cmd">git push -u origin feature/login</span>
+          <span class="note">After this, plain git push / git pull work on this branch.</span>
+        </div>
+        <div class="callout"><strong>Prevent it:</strong> <code>git config --global push.autoSetupRemote true</code> (Git 2.37+) makes a plain <code>git push</code> set up the link automatically for new branches.</div>
+      </div>
+
+      <div class="scenario" data-filter="support for password authentication was removed authentication failed invalid username or password token pat credential">
+        <div class="scenario-title">Authentication failed / password authentication was removed</div>
+        <div class="cmd-block">
+          <span class="err">remote: Support for password authentication was removed.</span>
+          <span class="err">fatal: Authentication failed for 'https://github.com/you/repo.git/'</span>
+        </div>
+        <div class="scenario-desc">GitHub no longer accepts your account password for Git over HTTPS. Use a Personal Access Token (PAT) as the password, or sign in through a helper.</div>
+        <div class="cmd-block">
+          <span class="step">Option A — GitHub CLI (easiest)</span>
+          <span class="cmd">gh auth login</span>
+          <span class="step">Option B — Personal Access Token</span>
+          <span class="comment"># GitHub → Settings → Developer settings → Personal access tokens</span>
+          <span class="comment"># Create a token, then paste it when Git asks for your password</span>
+          <span class="step">Stuck with an old saved password? (Windows)</span>
+          <span class="comment"># Control Panel → Credential Manager → Windows Credentials → remove "git:https://github.com"</span>
+          <span class="note">VS Code usually offers a "Sign in with GitHub" browser pop-up — accepting it also fixes this.</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="permission denied publickey ssh key could not read from remote repository">
+        <div class="scenario-title">Permission denied (publickey)</div>
+        <div class="cmd-block">
+          <span class="err">git@github.com: Permission denied (publickey).</span>
+          <span class="err">fatal: Could not read from remote repository.</span>
+        </div>
+        <div class="scenario-desc">Your remote uses SSH (<code>git@github.com:…</code>) but GitHub doesn't recognise any SSH key on this machine.</div>
+        <div class="cmd-block">
+          <span class="comment"># 1. Create a key (press Enter to accept defaults)</span>
+          <span class="cmd">ssh-keygen -t ed25519 -C "you@example.com"</span>
+          <span class="comment"># 2. Copy the PUBLIC key and paste it into GitHub → Settings → SSH and GPG keys</span>
+          <span class="cmd">cat ~/.ssh/id_ed25519.pub</span>
+          <span class="comment"># 3. Test the connection</span>
+          <span class="cmd">ssh -T git@github.com</span>
+          <span class="note">Prefer to skip SSH? Switch to HTTPS: git remote set-url origin https://github.com/username/repo-name.git</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="fatal repository not found does not exist 404 wrong url access">
+        <div class="scenario-title">fatal: repository not found</div>
+        <div class="cmd-block">
+          <span class="err">remote: Repository not found.</span>
+          <span class="err">fatal: repository 'https://github.com/you/repo.git/' not found</span>
+        </div>
+        <div class="scenario-desc">Either the URL has a typo, the repo is private and you're signed in as a different account, or you haven't been given access.</div>
+        <div class="cmd-block">
+          <span class="cmd">git remote -v</span>
+          <span class="note">Compare the URL character-by-character with the one on GitHub's green "Code" button.</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="fatal not a git repository or any of the parent directories wrong folder">
+        <div class="scenario-title">fatal: not a git repository</div>
+        <div class="cmd-block">
+          <span class="err">fatal: not a git repository (or any of the parent directories): .git</span>
+        </div>
+        <div class="scenario-desc">Your terminal is in the wrong folder, or this folder was never initialised.</div>
+        <div class="cmd-block">
+          <span class="comment"># Where am I?</span>
+          <span class="cmd">pwd</span>
+          <span class="comment"># Move into the project folder…</span>
+          <span class="cmd">cd path/to/your-project</span>
+          <span class="comment"># …or turn this folder into a repo</span>
+          <span class="cmd">git init</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="nothing to commit working tree clean nothing added to commit but untracked files present">
+        <div class="scenario-title">nothing to commit / nothing added to commit</div>
+        <div class="cmd-block">
+          <span class="err">nothing added to commit but untracked files present (use "git add" to track)</span>
+        </div>
+        <div class="scenario-desc">You committed before staging. <em>"working tree clean"</em> means everything is already committed — just push.</div>
+        <div class="cmd-block">
+          <span class="cmd">git add .</span>
+          <span class="cmd">git commit -m "Your message"</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="author identity unknown please tell me who you are unable to auto-detect email address">
+        <div class="scenario-title">Author identity unknown — Please tell me who you are</div>
+        <div class="cmd-block">
+          <span class="err">*** Please tell me who you are.</span>
+          <span class="err">fatal: unable to auto-detect email address</span>
+        </div>
+        <div class="scenario-desc">Git needs a name and email before it can create commits. One-time fix:</div>
+        <div class="cmd-block">
+          <span class="cmd">git config --global user.name "Your Name"</span>
+          <span class="cmd">git config --global user.email "you@example.com"</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="your local changes to the following files would be overwritten by merge checkout please commit or stash">
+        <div class="scenario-title">Your local changes would be overwritten by merge / checkout</div>
+        <div class="cmd-block">
+          <span class="err">error: Your local changes to the following files would be overwritten by merge:</span>
+          <span class="err">Please commit your changes or stash them before you merge.</span>
+        </div>
+        <div class="scenario-desc">You have uncommitted edits to files that the pull/switch also wants to change. Park them, pull, then bring them back.</div>
+        <div class="cmd-block">
+          <span class="cmd">git stash</span>
+          <span class="cmd">git pull</span>
+          <span class="cmd">git stash pop</span>
+          <span class="note">Or just commit your work first: git add . → git commit -m "WIP" → git pull</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="you have divergent branches and need to specify how to reconcile them pull hint">
+        <div class="scenario-title">hint: You have divergent branches and need to specify how to reconcile them</div>
+        <div class="cmd-block">
+          <span class="err">fatal: Need to specify how to reconcile divergent branches.</span>
+        </div>
+        <div class="scenario-desc">Both you and the remote have new commits. Git wants you to pick a default strategy for <code>git pull</code> once.</div>
+        <div class="cmd-block">
+          <span class="comment"># Recommended: put your commits on top (linear history)</span>
+          <span class="cmd">git config --global pull.rebase true</span>
+          <span class="comment"># Or: always create a merge commit</span>
+          <span class="cmd">git config --global pull.rebase false</span>
+          <span class="comment"># Then pull again</span>
+          <span class="cmd">git pull</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="you are in detached head state head detached at checkout commit">
+        <div class="scenario-title">You are in 'detached HEAD' state</div>
+        <div class="cmd-block">
+          <span class="err">You are in 'detached HEAD' state. You can look around, make experimental changes…</span>
+        </div>
+        <div class="scenario-desc">You checked out a specific commit or tag, not a branch. Anything you commit here isn't on any branch yet.</div>
+        <div class="cmd-block">
+          <span class="comment"># Just looking? Go back to your branch</span>
+          <span class="cmd">git switch main</span>
+          <span class="comment"># Made commits you want to keep? Put them on a new branch</span>
+          <span class="cmd">git switch -c my-rescued-work</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="pathspec did not match any files known to git switch checkout remote branch not found">
+        <div class="scenario-title">error: pathspec 'branch-name' did not match any file(s) known to git</div>
+        <div class="cmd-block">
+          <span class="err">error: pathspec 'feature/login' did not match any file(s) known to git</span>
+        </div>
+        <div class="scenario-desc">A teammate created the branch on GitHub, but your machine hasn't downloaded the list of branches yet (or there's a typo).</div>
+        <div class="cmd-block">
+          <span class="cmd">git fetch</span>
+          <span class="cmd">git branch -a</span>
+          <span class="cmd">git switch feature/login</span>
+          <span class="note">git switch automatically creates a local branch that tracks origin/feature/login.</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="file exceeds github file size limit 100 mb large file gh001 lfs">
+        <div class="scenario-title">File exceeds GitHub's 100 MB file size limit</div>
+        <div class="cmd-block">
+          <span class="err">remote: error: File data/big.zip is 142.00 MB; this exceeds GitHub's file size limit of 100.00 MB</span>
+        </div>
+        <div class="scenario-desc">A big file got committed. If it's only in your <em>latest</em> (unpushed) commit, drop it from that commit:</div>
+        <div class="cmd-block">
+          <span class="cmd">git rm --cached data/big.zip</span>
+          <span class="cmd">echo "data/big.zip" &gt;&gt; .gitignore</span>
+          <span class="cmd">git add .gitignore</span>
+          <span class="cmd">git commit --amend --no-edit</span>
+          <span class="cmd">git push</span>
+          <span class="note">If the file is buried in an older commit, see Advanced → Scenarios → "Remove a secret or large file from all history". For files you genuinely need, use Git LFS.</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="gitignore not working still tracked file ignored already committed">
+        <div class="scenario-title">.gitignore isn't ignoring a file</div>
+        <div class="scenario-desc">.gitignore only affects <em>untracked</em> files. If the file was committed before you added the rule, Git keeps tracking it. Untrack it (your local copy stays):</div>
+        <div class="cmd-block">
+          <span class="cmd">git rm --cached path/to/file</span>
+          <span class="comment"># For a whole folder, e.g. node_modules</span>
+          <span class="cmd">git rm -r --cached node_modules</span>
+          <span class="cmd">git commit -m "Stop tracking ignored files"</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="warning lf will be replaced by crlf line endings windows">
+        <div class="scenario-title">warning: LF will be replaced by CRLF</div>
+        <div class="cmd-block">
+          <span class="err">warning: in the working copy of 'app.js', LF will be replaced by CRLF the next time Git touches it</span>
+        </div>
+        <div class="scenario-desc">Just a warning, not an error — Windows and Mac/Linux use different line endings. Safe to ignore. On Windows, this setting keeps things consistent:</div>
+        <div class="cmd-block">
+          <span class="cmd">git config --global core.autocrlf true</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="merge conflict automatic merge failed fix conflicts and then commit the result">
+        <div class="scenario-title">Automatic merge failed; fix conflicts and then commit</div>
+        <div class="cmd-block">
+          <span class="err">CONFLICT (content): Merge conflict in src/app.js</span>
+          <span class="err">Automatic merge failed; fix conflicts and then commit the result.</span>
+        </div>
+        <div class="scenario-desc">Two changes touched the same lines. Nothing is broken — Git is asking you to choose. Head to the <a href="#" class="inline-link" onclick="show('conflicts');return false;">Conflicts tab</a> for the full walkthrough.</div>
+      </div>
+
+      <div class="callout"><strong>General rule:</strong> read the <code>hint:</code> lines in Git's output — they usually tell you the exact command to run next.</div>
+    </div>
+
+<!-- Cheat sheet -->
+    <div id="cheatsheet" class="section" data-mode="beginner">
+      <div class="section-tag tag-ref">Quick reference</div>
+      <h2>Cheat sheet</h2>
+      <p class="section-intro">Every command in one place.</p>
+
+      <table class="cheat-table">
+        <thead>
+          <tr>
+            <th>What you want to do</th>
+            <th>Command</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="cheat-section-row"><td colspan="2">Setup</td></tr>
+          <tr><td>Set your name</td><td>git config --global user.name "Name"</td></tr>
+          <tr><td>Set your email</td><td>git config --global user.email "e@mail.com"</td></tr>
+          <tr><td>Start a new repo</td><td>git init</td></tr>
+          <tr><td>Download a repo</td><td>git clone &lt;url&gt;</td></tr>
+          <tr><td>Connect to a remote</td><td>git remote add origin &lt;url&gt;</td></tr>
+
+          <tr class="cheat-section-row"><td colspan="2">Daily</td></tr>
+          <tr><td>Check what's changed</td><td>git status</td></tr>
+          <tr><td>Stage all files</td><td>git add .</td></tr>
+          <tr><td>Stage one file</td><td>git add path/to/file</td></tr>
+          <tr><td>Commit</td><td>git commit -m "message"</td></tr>
+          <tr><td>Push</td><td>git push</td></tr>
+          <tr><td>Pull</td><td>git pull</td></tr>
+          <tr><td>View compact log</td><td>git log --oneline</td></tr>
+
+          <tr class="cheat-section-row"><td colspan="2">Branches</td></tr>
+          <tr><td>Create and switch to branch</td><td>git checkout -b &lt;name&gt;</td></tr>
+          <tr><td>Switch branch</td><td>git checkout &lt;name&gt;</td></tr>
+          <tr><td>Merge branch into current</td><td>git merge &lt;branch&gt;</td></tr>
+          <tr><td>Delete local branch</td><td>git branch -d &lt;name&gt;</td></tr>
+          <tr><td>Delete remote branch</td><td>git push origin --delete &lt;name&gt;</td></tr>
+
+          <tr class="cheat-section-row"><td colspan="2">Conflicts</td></tr>
+          <tr><td>Keep remote version of a file</td><td>git checkout --theirs &lt;file&gt;</td></tr>
+          <tr><td>Keep local version of a file</td><td>git checkout --ours &lt;file&gt;</td></tr>
+          <tr><td>Mark conflict resolved</td><td>git add &lt;file&gt;</td></tr>
+          <tr><td>Abort a merge</td><td>git merge --abort</td></tr>
+
+          <tr class="cheat-section-row"><td colspan="2">Undo</td></tr>
+          <tr><td>Unstage a file</td><td>git restore --staged &lt;file&gt;</td></tr>
+          <tr><td>Discard file changes</td><td>git checkout -- &lt;file&gt;</td></tr>
+          <tr><td>Undo last commit (keep edits)</td><td>git reset --soft HEAD~1</td></tr>
+          <tr><td>Fix last commit message</td><td>git commit --amend -m "msg"</td></tr>
+          <tr><td>Stash changes</td><td>git stash</td></tr>
+          <tr><td>Restore stash</td><td>git stash pop</td></tr>
+
+          <tr class="cheat-section-row"><td colspan="2">Fix errors</td></tr>
+          <tr><td>src refspec main does not match any</td><td>git add . &amp;&amp; git commit -m "Initial commit" &amp;&amp; git branch -M main</td></tr>
+          <tr><td>Push rejected (remote has new work)</td><td>git pull origin main --rebase</td></tr>
+          <tr><td>Refusing to merge unrelated histories</td><td>git pull origin main --allow-unrelated-histories</td></tr>
+          <tr><td>Remote origin already exists</td><td>git remote set-url origin &lt;url&gt;</td></tr>
+          <tr><td>No upstream branch</td><td>git push -u origin &lt;branch&gt;</td></tr>
+          <tr><td>Password auth removed</td><td>gh auth login</td></tr>
+          <tr><td>Local changes would be overwritten</td><td>git stash → git pull → git stash pop</td></tr>
+          <tr><td>Divergent branches on pull</td><td>git config --global pull.rebase true</td></tr>
+          <tr><td>Detached HEAD — keep work</td><td>git switch -c &lt;new-branch&gt;</td></tr>
+          <tr><td>Stop tracking an ignored file</td><td>git rm --cached &lt;file&gt;</td></tr>
+          <tr><td>Always start repos on main</td><td>git config --global init.defaultBranch main</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+      <!-- ================= ADVANCED ================= -->
+
+    <!-- Rebase & rewrite history -->
+    <div id="rebase" class="section" data-mode="advanced">
+      <div class="section-tag tag-adv">Rewrite history</div>
+      <h2>Rebase &amp; clean history</h2>
+      <p class="section-intro">Rebase replays your commits on top of another branch, giving a straight-line history. Powerful — but it rewrites commit IDs.</p>
+
+      <h3>Merge vs rebase at a glance</h3>
+      <div class="flow">
+        <span class="flow-step">merge → keeps history, adds a merge commit</span>
+      </div>
+      <div class="flow">
+        <span class="flow-step">rebase → rewrites your commits on top, no merge commit</span>
+      </div>
+      <div class="danger-callout"><strong>Golden rule of rebasing:</strong> never rebase commits that other people have already pulled. Rebase your own feature branches freely; leave shared branches like <code>main</code> alone.</div>
+
+      <h3>Update your feature branch with the latest main</h3>
+      <div class="cmd-block">
+        <span class="cmd">git switch feature/login</span>
+        <span class="cmd">git fetch origin</span>
+        <span class="cmd">git rebase origin/main</span>
+        <span class="comment"># During conflicts:</span>
+        <span class="cmd">git add &lt;file&gt;  &amp;&amp;  git rebase --continue</span>
+        <span class="cmd">git rebase --skip      # drop the current commit</span>
+        <span class="cmd">git rebase --abort     # go back to before you started</span>
+        <span class="comment"># Already pushed this branch? Update it safely:</span>
+        <span class="cmd">git push --force-with-lease</span>
+      </div>
+
+      <h3>Interactive rebase — edit, squash, reorder, drop</h3>
+      <div class="cmd-block">
+        <span class="comment"># Rework the last 5 commits</span>
+        <span class="cmd">git rebase -i HEAD~5</span>
+        <span class="comment"># Or everything since you branched off main</span>
+        <span class="cmd">git rebase -i main</span>
+      </div>
+      <p>Git opens a to-do list. Change the word at the start of each line, save, close:</p>
+      <div class="conflict-file">
+        <span class="cf-code">pick   a1b2c3d Add login form</span><br>
+        <span class="cf-theirs">squash e4f5a6b Fix typo in login form</span>   <span class="cf-divider"># merge into previous, edit message</span><br>
+        <span class="cf-theirs">fixup  9c8d7e6 Oops, lint</span>             <span class="cf-divider"># merge into previous, discard message</span><br>
+        <span class="cf-ours">reword 1f2e3d4 add validation</span>         <span class="cf-divider"># keep changes, rewrite message</span><br>
+        <span class="cf-ours">edit   5a6b7c8 Big mixed commit</span>       <span class="cf-divider"># stop here so you can amend/split</span><br>
+        <span class="cf-divider">drop   0d9e8f7 Debug logging</span>          <span class="cf-divider"># delete this commit</span>
+      </div>
+      <div class="callout"><strong>Reorder commits</strong> by simply moving the lines up or down in the list.</div>
+
+      <h3>Fixup commits + autosquash (the tidy way)</h3>
+      <p>Found a bug in an earlier commit on your branch? Tag the fix to it, and let Git fold it in automatically.</p>
+      <div class="cmd-block">
+        <span class="cmd">git add .</span>
+        <span class="cmd">git commit --fixup=a1b2c3d</span>
+        <span class="cmd">git rebase -i --autosquash main</span>
+        <span class="note">Set once: git config --global rebase.autosquash true — then plain git rebase -i handles fixups for you.</span>
+      </div>
+
+      <h3>Split one big commit into several</h3>
+      <div class="cmd-block">
+        <span class="cmd">git rebase -i HEAD~3          # mark the commit as "edit"</span>
+        <span class="cmd">git reset HEAD~                # un-commit it, keep the changes</span>
+        <span class="cmd">git add -p                     # stage hunk-by-hunk</span>
+        <span class="cmd">git commit -m "Part 1: model"</span>
+        <span class="cmd">git add .</span>
+        <span class="cmd">git commit -m "Part 2: UI"</span>
+        <span class="cmd">git rebase --continue</span>
+      </div>
+
+      <h3>Stage part of a file (<code>git add -p</code>)</h3>
+      <div class="cmd-block">
+        <span class="cmd">git add -p path/to/file.js</span>
+        <span class="note">For each hunk: y = stage, n = skip, s = split into smaller hunks, e = edit manually, q = quit.</span>
+      </div>
+
+      <h3>Move a branch to a different base (<code>--onto</code>)</h3>
+      <p>You branched <code>feature-b</code> off <code>feature-a</code>, but now want it based on <code>main</code> only:</p>
+      <div class="cmd-block">
+        <span class="comment"># git rebase --onto &lt;new-base&gt; &lt;old-base&gt; &lt;branch&gt;</span>
+        <span class="cmd">git rebase --onto main feature-a feature-b</span>
+      </div>
+
+      <h3>Stacked branches: rebase them all at once</h3>
+      <div class="cmd-block">
+        <span class="comment"># Rebases the top branch AND moves every branch pointing into the stack</span>
+        <span class="cmd">git rebase --update-refs main</span>
+        <span class="cmd">git config --global rebase.updateRefs true</span>
+        <span class="note">Requires Git 2.38 or newer. Check with: git --version</span>
+      </div>
+
+      <h3>Squash a whole branch into one commit (without interactive rebase)</h3>
+      <div class="cmd-block">
+        <span class="cmd">git reset --soft $(git merge-base main HEAD)</span>
+        <span class="cmd">git commit -m "Feature: user login"</span>
+      </div>
+    </div>
+
+    <!-- Recovery & reflog -->
+    <div id="recovery" class="section" data-mode="advanced">
+      <div class="section-tag tag-adv">Recovery</div>
+      <h2>Recovery &amp; reflog</h2>
+      <p class="section-intro">Git almost never truly deletes a commit. The reflog is your safety net — a diary of every place HEAD has pointed.</p>
+
+      <h3>The reflog</h3>
+      <div class="cmd-block">
+        <span class="cmd">git reflog</span>
+        <span class="plain">a1b2c3d HEAD@{0}: reset: moving to HEAD~3</span>
+        <span class="plain">9f8e7d6 HEAD@{1}: commit: Add payment form</span>
+        <span class="plain">5c4b3a2 HEAD@{2}: rebase (finish): returning to refs/heads/feature</span>
+        <span class="comment"># Jump back to any point</span>
+        <span class="cmd">git reset --hard HEAD@{1}</span>
+        <span class="note">Reflog is local only and entries expire (by default after ~90 days for reachable, ~30 for unreachable commits).</span>
+      </div>
+
+      <h3>Reset modes compared</h3>
+      <table class="compare-table">
+        <thead><tr><th>Command</th><th>Commit history</th><th>Staging area</th><th>Your files</th></tr></thead>
+        <tbody>
+          <tr><td>reset --soft</td><td>Moved back</td><td class="yes">Kept (staged)</td><td class="yes">Kept</td></tr>
+          <tr><td>reset --mixed</td><td>Moved back</td><td>Cleared (unstaged)</td><td class="yes">Kept</td></tr>
+          <tr><td>reset --hard</td><td>Moved back</td><td class="no">Cleared</td><td class="no">Overwritten</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Scenarios</h3>
+      <div class="scenario">
+        <div class="scenario-title">Recover a deleted branch <span class="scenario-badge badge-safe">Safe</span></div>
+        <div class="cmd-block">
+          <span class="comment"># Find the last commit the branch pointed to</span>
+          <span class="cmd">git reflog | grep feature/old</span>
+          <span class="cmd">git branch feature/old 9f8e7d6</span>
+        </div>
+      </div>
+
+      <div class="scenario">
+        <div class="scenario-title">Undo a rebase or merge that went wrong <span class="scenario-badge badge-safe">Safe</span></div>
+        <div class="cmd-block">
+          <span class="comment"># Right after the operation, Git saves the old position in ORIG_HEAD</span>
+          <span class="cmd">git reset --hard ORIG_HEAD</span>
+          <span class="comment"># Did something else since? Find the pre-rebase entry</span>
+          <span class="cmd">git reflog</span>
+          <span class="cmd">git reset --hard HEAD@{5}</span>
+        </div>
+      </div>
+
+      <div class="scenario">
+        <div class="scenario-title">Undo a commit that's already pushed <span class="scenario-badge badge-safe">Safe for shared branches</span></div>
+        <div class="scenario-desc">Don't rewrite shared history — create a new commit that reverses it.</div>
+        <div class="cmd-block">
+          <span class="cmd">git revert a1b2c3d</span>
+          <span class="comment"># Revert several commits into one revert commit</span>
+          <span class="cmd">git revert --no-commit a1b2c3d..HEAD</span>
+          <span class="cmd">git commit -m "Revert feature X"</span>
+        </div>
+      </div>
+
+      <div class="scenario">
+        <div class="scenario-title">Revert a merge commit</div>
+        <div class="scenario-desc">Merge commits have two parents; <code>-m 1</code> says "keep the mainline (the branch you merged into)".</div>
+        <div class="cmd-block">
+          <span class="cmd">git revert -m 1 &lt;merge-commit-sha&gt;</span>
+          <span class="note">Heads-up: re-merging that same branch later won't bring the changes back — you'd need to revert the revert first.</span>
+        </div>
+      </div>
+
+      <div class="scenario">
+        <div class="scenario-title">Restore one file from an older commit</div>
+        <div class="cmd-block">
+          <span class="cmd">git restore --source=a1b2c3d path/to/file.js</span>
+          <span class="comment"># Or peek without changing anything</span>
+          <span class="cmd">git show a1b2c3d:path/to/file.js</span>
+        </div>
+      </div>
+
+      <div class="scenario">
+        <div class="scenario-title">Find a dropped stash or orphaned commit</div>
+        <div class="cmd-block">
+          <span class="cmd">git fsck --no-reflog | grep "dangling commit"</span>
+          <span class="cmd">git show &lt;sha&gt;</span>
+          <span class="cmd">git stash apply &lt;sha&gt;</span>
+        </div>
+      </div>
+
+      <div class="pro-callout"><strong>Before any scary command</strong>, drop a bookmark: <code>git branch backup/before-rebase</code>. It costs nothing and you can delete it afterwards.</div>
+    </div>
+
+    <!-- Remotes & forks -->
+    <div id="remotes" class="section" data-mode="advanced">
+      <div class="section-tag tag-adv">Remotes</div>
+      <h2>Remotes, forks &amp; tags</h2>
+      <p class="section-intro">Working with more than one remote, force-pushing safely, and releasing versions.</p>
+
+      <h3><code>--force-with-lease</code> instead of <code>--force</code></h3>
+      <div class="cmd-block">
+        <span class="cmd">git push --force-with-lease</span>
+        <span class="cmd">git push --force-with-lease --force-if-includes</span>
+        <span class="note">--force-with-lease refuses to overwrite the remote if someone pushed since your last fetch. --force-if-includes adds protection against a background fetch silently updating your remote-tracking ref.</span>
+      </div>
+      <div class="danger-callout"><strong>Never</strong> force-push to <code>main</code> or any branch others build on unless the whole team agrees.</div>
+
+      <h3>Keep a fork in sync with the original</h3>
+      <div class="cmd-block">
+        <span class="cmd">git remote add upstream https://github.com/original-owner/repo.git</span>
+        <span class="cmd">git fetch upstream</span>
+        <span class="cmd">git switch main</span>
+        <span class="cmd">git rebase upstream/main</span>
+        <span class="cmd">git push --force-with-lease origin main</span>
+      </div>
+
+      <h3>Check out a GitHub pull request locally</h3>
+      <div class="cmd-block">
+        <span class="cmd">git fetch origin pull/123/head:pr-123</span>
+        <span class="cmd">git switch pr-123</span>
+        <span class="note">Or with GitHub CLI: gh pr checkout 123</span>
+      </div>
+
+      <h3>Clean up stale remote branches</h3>
+      <div class="cmd-block">
+        <span class="cmd">git fetch --prune</span>
+        <span class="comment"># Make it automatic</span>
+        <span class="cmd">git config --global fetch.prune true</span>
+        <span class="comment"># List local branches already merged into main</span>
+        <span class="cmd">git branch --merged main</span>
+      </div>
+
+      <h3>Rename a branch (local + remote)</h3>
+      <div class="cmd-block">
+        <span class="cmd">git branch -m old-name new-name</span>
+        <span class="cmd">git push -u origin new-name</span>
+        <span class="cmd">git push origin --delete old-name</span>
+      </div>
+
+      <h3>Switch remote from HTTPS to SSH (or back)</h3>
+      <div class="cmd-block">
+        <span class="cmd">git remote set-url origin git@github.com:username/repo-name.git</span>
+        <span class="cmd">git remote -v</span>
+      </div>
+
+      <h3>Tags &amp; releases</h3>
+      <div class="cmd-block">
+        <span class="comment"># Annotated tag (recommended — stores author, date, message)</span>
+        <span class="cmd">git tag -a v1.2.0 -m "Release 1.2.0"</span>
+        <span class="comment"># Tag an older commit</span>
+        <span class="cmd">git tag -a v1.1.1 9f8e7d6 -m "Hotfix"</span>
+        <span class="cmd">git push origin v1.2.0</span>
+        <span class="cmd">git push origin --tags</span>
+        <span class="comment"># Delete a tag locally and remotely</span>
+        <span class="cmd">git tag -d v1.2.0</span>
+        <span class="cmd">git push origin --delete v1.2.0</span>
+        <span class="comment"># Which tag is this commit closest to?</span>
+        <span class="cmd">git describe --tags</span>
+      </div>
+    </div>
+
+    <!-- Stash & cherry-pick -->
+    <div id="stashpick" class="section" data-mode="advanced">
+      <div class="section-tag tag-adv">Moving work around</div>
+      <h2>Stash &amp; cherry-pick</h2>
+      <p class="section-intro">Shuffle changes between branches without messy merges.</p>
+
+      <h3>Stash like a pro</h3>
+      <div class="cmd-block">
+        <span class="comment"># Named stash</span>
+        <span class="cmd">git stash push -m "half-done navbar"</span>
+        <span class="comment"># Include untracked (new) files</span>
+        <span class="cmd">git stash push -u</span>
+        <span class="comment"># Stash only specific files</span>
+        <span class="cmd">git stash push -m "just css" -- src/styles.css</span>
+        <span class="comment"># Stash only what's staged (Git 2.35+)</span>
+        <span class="cmd">git stash push --staged</span>
+        <span class="comment"># Inspect</span>
+        <span class="cmd">git stash list</span>
+        <span class="cmd">git stash show -p stash@{1}</span>
+        <span class="comment"># Apply but keep it in the list (pop removes it)</span>
+        <span class="cmd">git stash apply stash@{1}</span>
+        <span class="cmd">git stash drop stash@{1}</span>
+        <span class="comment"># Turn a stash into its own branch (great when pop conflicts)</span>
+        <span class="cmd">git stash branch rescue-branch stash@{0}</span>
+      </div>
+
+      <h3>Cherry-pick</h3>
+      <p>Copy specific commits from one branch onto your current branch.</p>
+      <div class="cmd-block">
+        <span class="cmd">git cherry-pick a1b2c3d</span>
+        <span class="comment"># A range: A..B excludes A, so use A^..B to include it</span>
+        <span class="cmd">git cherry-pick a1b2c3d^..f6e5d4c</span>
+        <span class="comment"># Record where it came from in the message</span>
+        <span class="cmd">git cherry-pick -x a1b2c3d</span>
+        <span class="comment"># Bring the changes in without committing yet</span>
+        <span class="cmd">git cherry-pick -n a1b2c3d</span>
+        <span class="comment"># On conflict</span>
+        <span class="cmd">git cherry-pick --continue   |   --skip   |   --abort</span>
+      </div>
+
+      <h3>Scenarios</h3>
+      <div class="scenario">
+        <div class="scenario-title">Committed to main instead of a feature branch (not pushed)</div>
+        <div class="cmd-block">
+          <span class="comment"># 1. Create the branch where you are — it keeps the commits</span>
+          <span class="cmd">git branch feature/oops</span>
+          <span class="comment"># 2. Move main back to match GitHub (drops the stray commits from main only)</span>
+          <span class="cmd">git reset --hard origin/main</span>
+          <span class="comment"># 3. Carry on on the feature branch</span>
+          <span class="cmd">git switch feature/oops</span>
+        </div>
+      </div>
+
+      <div class="scenario">
+        <div class="scenario-title">Committed to the wrong existing branch</div>
+        <div class="cmd-block">
+          <span class="cmd">git log --oneline -3            # copy the sha</span>
+          <span class="cmd">git switch correct-branch</span>
+          <span class="cmd">git cherry-pick a1b2c3d</span>
+          <span class="cmd">git switch wrong-branch</span>
+          <span class="cmd">git reset --hard HEAD~1</span>
+        </div>
+      </div>
+
+      <div class="scenario">
+        <div class="scenario-title">Ship a hotfix from a feature branch to main</div>
+        <div class="cmd-block">
+          <span class="cmd">git switch main</span>
+          <span class="cmd">git pull</span>
+          <span class="cmd">git cherry-pick -x &lt;hotfix-sha&gt;</span>
+          <span class="cmd">git push</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Debug & search -->
+    <div id="debug" class="section" data-mode="advanced">
+      <div class="section-tag tag-adv">Investigate</div>
+      <h2>Debug &amp; search history</h2>
+      <p class="section-intro">Find out who changed what, when, and which commit broke things.</p>
+
+      <h3>Readable history</h3>
+      <div class="cmd-block">
+        <span class="cmd">git log --oneline --graph --decorate --all</span>
+        <span class="comment"># Commits on feature that aren't on main</span>
+        <span class="cmd">git log main..feature --oneline</span>
+        <span class="comment"># Filter by author, date, path</span>
+        <span class="cmd">git log --author="Anunjay" --since="2 weeks ago" -- src/</span>
+        <span class="comment"># Full history of one file, even across renames</span>
+        <span class="cmd">git log --follow -p -- path/to/file.js</span>
+        <span class="comment"># Who commits most</span>
+        <span class="cmd">git shortlog -sn</span>
+      </div>
+
+      <h3>Search the code &amp; the history</h3>
+      <div class="cmd-block">
+        <span class="comment"># Search tracked files right now (fast, respects .gitignore)</span>
+        <span class="cmd">git grep -n "apiKey"</span>
+        <span class="comment"># "Pickaxe": commits that added or removed this exact string</span>
+        <span class="cmd">git log -S "calculateTotal" --oneline</span>
+        <span class="comment"># Commits whose diff matches a regex</span>
+        <span class="cmd">git log -G "timeout\s*=" --oneline</span>
+      </div>
+
+      <h3>Better diffs</h3>
+      <div class="cmd-block">
+        <span class="cmd">git diff --staged             # what you're about to commit</span>
+        <span class="cmd">git diff main...feature       # only changes made on feature since it branched</span>
+        <span class="cmd">git diff --stat               # summary by file</span>
+        <span class="cmd">git diff --word-diff          # great for prose / markdown</span>
+        <span class="cmd">git range-diff main old-feature new-feature   # compare a branch before/after rebase</span>
+      </div>
+
+      <h3>Blame, but smarter</h3>
+      <div class="cmd-block">
+        <span class="comment"># Lines 40–60 only, ignore whitespace, detect code moved from other files</span>
+        <span class="cmd">git blame -w -C -L 40,60 src/app.js</span>
+        <span class="comment"># Skip bulk-formatting commits (list their SHAs in the file)</span>
+        <span class="cmd">git config blame.ignoreRevsFile .git-blame-ignore-revs</span>
+      </div>
+
+      <h3>Bisect — binary-search for the commit that broke it</h3>
+      <div class="cmd-block">
+        <span class="cmd">git bisect start</span>
+        <span class="cmd">git bisect bad                 # current commit is broken</span>
+        <span class="cmd">git bisect good v1.4.0         # this one worked</span>
+        <span class="comment"># Git checks out a middle commit — test it, then answer:</span>
+        <span class="cmd">git bisect good   # or: git bisect bad</span>
+        <span class="comment"># Fully automatic: script exits 0 = good, non-zero = bad</span>
+        <span class="cmd">git bisect run npm test</span>
+        <span class="cmd">git bisect reset               # return to where you started</span>
+        <span class="note">With 1,000 commits between good and bad, bisect needs only about 10 steps.</span>
+      </div>
+    </div>
+
+    <!-- Worktrees & big repos -->
+    <div id="scale" class="section" data-mode="advanced">
+      <div class="section-tag tag-adv">Scale</div>
+      <h2>Worktrees, big repos &amp; submodules</h2>
+      <p class="section-intro">Work on several branches at once and tame huge repositories.</p>
+
+      <h3>Worktrees — multiple branches checked out side by side</h3>
+      <p>No more stashing to review a PR or ship a hotfix. Each worktree is its own folder sharing one repo.</p>
+      <div class="cmd-block">
+        <span class="cmd">git worktree add ../myapp-hotfix hotfix/login</span>
+        <span class="comment"># New branch in a new folder</span>
+        <span class="cmd">git worktree add -b feature/x ../myapp-x main</span>
+        <span class="cmd">git worktree list</span>
+        <span class="cmd">git worktree remove ../myapp-hotfix</span>
+        <span class="cmd">git worktree prune</span>
+        <span class="note">The same branch can't be checked out in two worktrees at once.</span>
+      </div>
+
+      <h3>Faster clones</h3>
+      <div class="cmd-block">
+        <span class="comment"># Shallow: only the latest commit (great for CI)</span>
+        <span class="cmd">git clone --depth 1 https://github.com/org/big-repo.git</span>
+        <span class="cmd">git fetch --unshallow          # get full history later</span>
+        <span class="comment"># Partial (blobless): full history, file contents downloaded on demand</span>
+        <span class="cmd">git clone --filter=blob:none https://github.com/org/big-repo.git</span>
+      </div>
+
+      <h3>Sparse checkout — only the folders you need</h3>
+      <div class="cmd-block">
+        <span class="cmd">git clone --filter=blob:none --sparse https://github.com/org/monorepo.git</span>
+        <span class="cmd">cd monorepo</span>
+        <span class="cmd">git sparse-checkout set apps/web packages/ui</span>
+        <span class="cmd">git sparse-checkout add docs</span>
+        <span class="cmd">git sparse-checkout disable    # back to everything</span>
+      </div>
+
+      <h3>Git LFS — large binary files</h3>
+      <div class="cmd-block">
+        <span class="cmd">git lfs install</span>
+        <span class="cmd">git lfs track "*.psd" "*.mp4"</span>
+        <span class="cmd">git add .gitattributes</span>
+        <span class="cmd">git add design.psd</span>
+        <span class="cmd">git commit -m "Track design files with LFS"</span>
+        <span class="note">Only affects files added after tracking. Moving existing history into LFS: git lfs migrate import --include="*.psd"</span>
+      </div>
+
+      <h3>Submodules</h3>
+      <div class="cmd-block">
+        <span class="cmd">git submodule add https://github.com/org/lib.git vendor/lib</span>
+        <span class="comment"># Cloning a repo that has submodules</span>
+        <span class="cmd">git clone --recurse-submodules &lt;url&gt;</span>
+        <span class="comment"># Already cloned and the submodule folder is empty?</span>
+        <span class="cmd">git submodule update --init --recursive</span>
+        <span class="comment"># Pull latest commits for every submodule</span>
+        <span class="cmd">git submodule update --remote</span>
+      </div>
+
+      <h3>Housekeeping</h3>
+      <div class="cmd-block">
+        <span class="cmd">git maintenance start          # schedule background optimisation</span>
+        <span class="cmd">git gc                         # compress and clean up now</span>
+        <span class="cmd">git count-objects -vH          # how big is .git?</span>
+        <span class="cmd">git clean -n                   # preview untracked files to delete</span>
+        <span class="cmd">git clean -fd                  # delete untracked files &amp; folders</span>
+      </div>
+      <div class="danger-callout"><strong>Warning:</strong> <code>git clean -fd</code> is permanent — untracked files aren't in Git, so the reflog can't bring them back. Always run <code>-n</code> first.</div>
+    </div>
+
+    <!-- Config & aliases -->
+    <div id="config" class="section" data-mode="advanced">
+      <div class="section-tag tag-adv">Configure</div>
+      <h2>Config &amp; aliases</h2>
+      <p class="section-intro">A few settings that prevent most everyday errors and save a lot of typing.</p>
+
+      <h3>Recommended global settings</h3>
+      <div class="cmd-block">
+        <span class="comment"># New repos start on main (prevents "src refspec main does not match any")</span>
+        <span class="cmd">git config --global init.defaultBranch main</span>
+        <span class="comment"># First push of a new branch sets upstream automatically (Git 2.37+)</span>
+        <span class="cmd">git config --global push.autoSetupRemote true</span>
+        <span class="comment"># git pull rebases instead of creating merge commits</span>
+        <span class="cmd">git config --global pull.rebase true</span>
+        <span class="comment"># Auto-stash dirty changes before a rebase, re-apply after</span>
+        <span class="cmd">git config --global rebase.autoStash true</span>
+        <span class="comment"># Fold fixup! commits automatically in rebase -i</span>
+        <span class="cmd">git config --global rebase.autosquash true</span>
+        <span class="comment"># Remove deleted remote branches on every fetch</span>
+        <span class="cmd">git config --global fetch.prune true</span>
+        <span class="comment"># Conflicts also show the original "base" version — much easier to resolve</span>
+        <span class="cmd">git config --global merge.conflictstyle zdiff3</span>
+        <span class="comment"># Remember how you resolved a conflict and reuse it next time</span>
+        <span class="cmd">git config --global rerere.enabled true</span>
+        <span class="comment"># Show the diff in the commit message editor</span>
+        <span class="cmd">git config --global commit.verbose true</span>
+        <span class="note">zdiff3 needs Git 2.35+. On older Git use diff3.</span>
+      </div>
+
+      <h3>Aliases</h3>
+      <div class="cmd-block">
+        <span class="cmd">git config --global alias.st "status -sb"</span>
+        <span class="cmd">git config --global alias.lg "log --oneline --graph --decorate --all"</span>
+        <span class="cmd">git config --global alias.undo "reset --soft HEAD~1"</span>
+        <span class="cmd">git config --global alias.amend "commit --amend --no-edit"</span>
+        <span class="cmd">git config --global alias.pushf "push --force-with-lease"</span>
+        <span class="note">Now: git st, git lg, git undo, git amend, git pushf</span>
+      </div>
+
+      <h3>Separate work &amp; personal identities</h3>
+      <p>Use a different email automatically for repos under a given folder. In <code>~/.gitconfig</code>:</p>
+      <div class="conflict-file">
+        <span class="cf-theirs">[includeIf "gitdir:~/work/"]</span><br>
+        <span class="cf-code">    path = ~/.gitconfig-work</span>
+      </div>
+      <p>Then in <code>~/.gitconfig-work</code> set <code>[user] email = you@company.com</code>.</p>
+
+      <h3>Inspect your config</h3>
+      <div class="cmd-block">
+        <span class="cmd">git config --list --show-origin</span>
+        <span class="cmd">git config --global --edit</span>
+      </div>
+    </div>
+
+    <!-- Advanced scenarios -->
+    <div id="advscenarios" class="section" data-mode="advanced">
+      <div class="section-tag tag-error">Advanced troubleshooting</div>
+      <h2>Advanced scenarios</h2>
+      <p class="section-intro">Tricky situations and the exact recipes to get out of them.</p>
+
+      <input class="filter-input" type="text" placeholder="Filter scenarios… e.g. secret, rebase, force, squash" oninput="filterCards(this, 'advscenarios')" />
+      <div class="filter-empty">No matching scenario. Try a shorter keyword.</div>
+
+      <div class="scenario" data-filter="pushed secret password api key credentials leaked history remove filter-repo large file">
+        <div class="scenario-title">Remove a secret or large file from all history <span class="scenario-badge badge-risky">Rewrites history</span></div>
+        <div class="scenario-why"><strong>Do this first:</strong> rotate / revoke the leaked secret. Once pushed, assume it's compromised — rewriting history doesn't un-leak it.</div>
+        <div class="cmd-block">
+          <span class="comment"># git-filter-repo is the recommended tool (install separately: pip install git-filter-repo)</span>
+          <span class="cmd">git filter-repo --path config/secrets.env --invert-paths</span>
+          <span class="comment"># Or strip every blob larger than 100 MB</span>
+          <span class="cmd">git filter-repo --strip-blobs-bigger-than 100M</span>
+          <span class="comment"># filter-repo removes 'origin' as a safety measure — re-add it and force push</span>
+          <span class="cmd">git remote add origin &lt;url&gt;</span>
+          <span class="cmd">git push --force --all</span>
+          <span class="cmd">git push --force --tags</span>
+          <span class="note">Everyone else must re-clone afterwards. Work on a fresh clone, and add the file to .gitignore.</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="rejected after rebase amend force push stale info non-fast-forward own branch">
+        <div class="scenario-title">Push rejected after you rebased or amended your own branch</div>
+        <div class="cmd-block">
+          <span class="err">! [rejected]  feature -&gt; feature (non-fast-forward)</span>
+        </div>
+        <div class="scenario-desc">Expected — you rewrote commits the remote already had. If the branch is yours alone:</div>
+        <div class="cmd-block">
+          <span class="cmd">git push --force-with-lease</span>
+          <span class="note">If it says "stale info", someone else pushed. Run git fetch, inspect with git log HEAD..origin/feature, rebase onto it, then push again.</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="teammate force pushed my branch diverged reset to remote">
+        <div class="scenario-title">A teammate force-pushed and your local branch diverged</div>
+        <div class="cmd-block">
+          <span class="comment"># No local work you care about? Match the remote exactly</span>
+          <span class="cmd">git fetch</span>
+          <span class="cmd">git reset --hard origin/feature</span>
+          <span class="comment"># Have local commits to keep? Replay only yours onto the new remote</span>
+          <span class="cmd">git rebase --onto origin/feature &lt;old-remote-sha&gt; feature</span>
+          <span class="note">Find &lt;old-remote-sha&gt; with: git reflog show origin/feature</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="squash merged pull request branch still shows commits diverged reuse branch">
+        <div class="scenario-title">PR was squash-merged, now the branch looks diverged</div>
+        <div class="scenario-desc">After a squash merge, your branch's commits aren't in <code>main</code> by ID. Don't keep building on it — start fresh.</div>
+        <div class="cmd-block">
+          <span class="cmd">git switch main</span>
+          <span class="cmd">git pull</span>
+          <span class="cmd">git branch -D feature/old</span>
+          <span class="cmd">git switch -c feature/next</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="same conflict again every rebase repeated conflicts rerere">
+        <div class="scenario-title">Resolving the same conflict over and over during rebases</div>
+        <div class="cmd-block">
+          <span class="cmd">git config --global rerere.enabled true</span>
+          <span class="note">"Reuse recorded resolution" — Git remembers how you fixed a conflict and applies it automatically next time.</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="rebase conflict stuck in the middle rebase in progress interactive rebase status">
+        <div class="scenario-title">Stuck mid-rebase and not sure what's going on</div>
+        <div class="cmd-block">
+          <span class="cmd">git status                     # shows which commit is being applied</span>
+          <span class="cmd">git diff --name-only --diff-filter=U   # list conflicted files</span>
+          <span class="cmd">git rebase --abort             # bail out completely, nothing lost</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="wrong author email commit change author amend reset-author">
+        <div class="scenario-title">Committed with the wrong name / email</div>
+        <div class="cmd-block">
+          <span class="comment"># Fix the last commit after correcting your config</span>
+          <span class="cmd">git commit --amend --reset-author --no-edit</span>
+          <span class="comment"># Fix the last N commits on your branch</span>
+          <span class="cmd">git rebase -i HEAD~3 --exec "git commit --amend --reset-author --no-edit"</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="retrigger ci pipeline empty commit rerun build">
+        <div class="scenario-title">Re-trigger CI without changing any code</div>
+        <div class="cmd-block">
+          <span class="cmd">git commit --allow-empty -m "chore: retrigger CI"</span>
+          <span class="cmd">git push</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="bring one file from another branch checkout file from branch">
+        <div class="scenario-title">Grab one file from another branch</div>
+        <div class="cmd-block">
+          <span class="cmd">git restore --source=feature/redesign -- src/theme.css</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="shallow update not allowed shallow clone push fails unshallow">
+        <div class="scenario-title">! [remote rejected] shallow update not allowed</div>
+        <div class="scenario-desc">You pushed from a shallow clone (<code>--depth</code>) to a new remote that needs full history.</div>
+        <div class="cmd-block">
+          <span class="cmd">git fetch --unshallow</span>
+          <span class="cmd">git push</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="protected branch hook declined gh006 cannot push to main">
+        <div class="scenario-title">Protected branch — push declined</div>
+        <div class="cmd-block">
+          <span class="err">remote: error: GH006: Protected branch update failed for refs/heads/main.</span>
+        </div>
+        <div class="scenario-desc">The repo requires changes to go through a pull request. Move your commits to a branch and open a PR:</div>
+        <div class="cmd-block">
+          <span class="cmd">git switch -c fix/my-change</span>
+          <span class="cmd">git push -u origin fix/my-change</span>
+          <span class="cmd">git switch main &amp;&amp; git reset --hard origin/main</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="rpc failed http 400 curl 55 early eof large push timeout">
+        <div class="scenario-title">error: RPC failed / early EOF on a big push or clone</div>
+        <div class="cmd-block">
+          <span class="err">error: RPC failed; HTTP 400 curl 22 The requested URL returned error: 400</span>
+        </div>
+        <div class="scenario-desc">Usually the push is too large in one go or the connection is flaky. Try pushing in smaller chunks, or switch to SSH.</div>
+        <div class="cmd-block">
+          <span class="cmd">git config http.postBuffer 524288000</span>
+          <span class="comment"># Push history in pieces (oldest commits first)</span>
+          <span class="cmd">git push origin &lt;older-sha&gt;:refs/heads/main</span>
+          <span class="note">If large binaries are the cause, move them to Git LFS instead.</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="index lock file exists another git process unable to create">
+        <div class="scenario-title">fatal: Unable to create '.git/index.lock': File exists</div>
+        <div class="scenario-desc">A previous Git command (or your editor) crashed mid-operation. Make sure no other Git process is running, then:</div>
+        <div class="cmd-block">
+          <span class="cmd">rm .git/index.lock</span>
+          <span class="note">Windows PowerShell: Remove-Item .git\index.lock</span>
+        </div>
+      </div>
+
+      <div class="scenario" data-filter="case sensitive rename file capital letters windows mac">
+        <div class="scenario-title">Renamed a file's capitalisation and Git ignores it</div>
+        <div class="scenario-desc">Windows and macOS file systems are case-insensitive by default, so <code>readme.md → README.md</code> isn't detected.</div>
+        <div class="cmd-block">
+          <span class="cmd">git mv readme.md README.md</span>
+          <span class="cmd">git commit -m "Rename readme to README"</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Advanced cheat sheet -->
+    <div id="advcheatsheet" class="section" data-mode="advanced">
+      <div class="section-tag tag-ref">Quick reference</div>
+      <h2>Advanced cheat sheet</h2>
+      <p class="section-intro">Every advanced command in one place.</p>
+      <table class="cheat-table">
+        <thead><tr><th>What you want to do</th><th>Command</th></tr></thead>
+        <tbody>
+          <tr class="cheat-section-row"><td colspan="2">Rewrite history</td></tr>
+          <tr><td>Rebase branch onto latest main</td><td>git rebase origin/main</td></tr>
+          <tr><td>Interactive rebase last N commits</td><td>git rebase -i HEAD~N</td></tr>
+          <tr><td>Create a fixup commit</td><td>git commit --fixup=&lt;sha&gt;</td></tr>
+          <tr><td>Auto-fold fixups</td><td>git rebase -i --autosquash main</td></tr>
+          <tr><td>Move branch to new base</td><td>git rebase --onto &lt;new&gt; &lt;old&gt; &lt;branch&gt;</td></tr>
+          <tr><td>Rebase stacked branches</td><td>git rebase --update-refs main</td></tr>
+          <tr><td>Stage part of a file</td><td>git add -p</td></tr>
+          <tr><td>Squash whole branch</td><td>git reset --soft $(git merge-base main HEAD)</td></tr>
+
+          <tr class="cheat-section-row"><td colspan="2">Recovery</td></tr>
+          <tr><td>See every HEAD move</td><td>git reflog</td></tr>
+          <tr><td>Jump back in time</td><td>git reset --hard HEAD@{n}</td></tr>
+          <tr><td>Undo last rebase/merge</td><td>git reset --hard ORIG_HEAD</td></tr>
+          <tr><td>Recover deleted branch</td><td>git branch &lt;name&gt; &lt;sha&gt;</td></tr>
+          <tr><td>Undo pushed commit</td><td>git revert &lt;sha&gt;</td></tr>
+          <tr><td>Revert a merge</td><td>git revert -m 1 &lt;merge-sha&gt;</td></tr>
+          <tr><td>Restore file from commit</td><td>git restore --source=&lt;sha&gt; &lt;file&gt;</td></tr>
+          <tr><td>Find dangling commits</td><td>git fsck --no-reflog</td></tr>
+
+          <tr class="cheat-section-row"><td colspan="2">Remotes</td></tr>
+          <tr><td>Safe force push</td><td>git push --force-with-lease</td></tr>
+          <tr><td>Add upstream (fork)</td><td>git remote add upstream &lt;url&gt;</td></tr>
+          <tr><td>Checkout a PR</td><td>git fetch origin pull/ID/head:pr-ID</td></tr>
+          <tr><td>Prune deleted remote branches</td><td>git fetch --prune</td></tr>
+          <tr><td>Annotated tag</td><td>git tag -a v1.0 -m "msg"</td></tr>
+          <tr><td>Push tags</td><td>git push origin --tags</td></tr>
+
+          <tr class="cheat-section-row"><td colspan="2">Stash &amp; cherry-pick</td></tr>
+          <tr><td>Stash with untracked files</td><td>git stash push -u -m "msg"</td></tr>
+          <tr><td>Stash specific file</td><td>git stash push -- &lt;file&gt;</td></tr>
+          <tr><td>Apply a specific stash</td><td>git stash apply stash@{n}</td></tr>
+          <tr><td>Stash → branch</td><td>git stash branch &lt;name&gt;</td></tr>
+          <tr><td>Cherry-pick a commit</td><td>git cherry-pick -x &lt;sha&gt;</td></tr>
+          <tr><td>Cherry-pick a range</td><td>git cherry-pick A^..B</td></tr>
+
+          <tr class="cheat-section-row"><td colspan="2">Investigate</td></tr>
+          <tr><td>Graph of all branches</td><td>git log --oneline --graph --all</td></tr>
+          <tr><td>Find when a string changed</td><td>git log -S "text"</td></tr>
+          <tr><td>Search tracked files</td><td>git grep -n "text"</td></tr>
+          <tr><td>Blame a range</td><td>git blame -w -C -L 10,20 &lt;file&gt;</td></tr>
+          <tr><td>Find the breaking commit</td><td>git bisect start / good / bad / reset</td></tr>
+          <tr><td>Compare rebased versions</td><td>git range-diff main old new</td></tr>
+
+          <tr class="cheat-section-row"><td colspan="2">Scale</td></tr>
+          <tr><td>Second working folder</td><td>git worktree add ../dir &lt;branch&gt;</td></tr>
+          <tr><td>Shallow clone</td><td>git clone --depth 1 &lt;url&gt;</td></tr>
+          <tr><td>Blobless clone</td><td>git clone --filter=blob:none &lt;url&gt;</td></tr>
+          <tr><td>Only some folders</td><td>git sparse-checkout set &lt;dirs&gt;</td></tr>
+          <tr><td>Track big files</td><td>git lfs track "*.ext"</td></tr>
+          <tr><td>Init submodules</td><td>git submodule update --init --recursive</td></tr>
+          <tr><td>Delete untracked files</td><td>git clean -n → git clean -fd</td></tr>
+
+          <tr class="cheat-section-row"><td colspan="2">Clean-up history</td></tr>
+          <tr><td>Remove file from all history</td><td>git filter-repo --path &lt;file&gt; --invert-paths</td></tr>
+          <tr><td>Fix author of last commit</td><td>git commit --amend --reset-author --no-edit</td></tr>
+          <tr><td>Empty commit (retrigger CI)</td><td>git commit --allow-empty -m "msg"</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+
+  </main>
+</div>
+<script>
+  const firstSection = { beginner: 'setup', advanced: 'rebase' };
+  const lastSection = { beginner: null, advanced: null };
+  let mode = 'beginner';
+  try { mode = localStorage.getItem('gitguide-mode') || 'beginner'; } catch (e) {}
+
+  /* ---- Night mode ---- */
+  function applyTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    const btn = document.getElementById('theme-toggle');
+    const label = t === 'dark' ? 'Switch to light mode' : 'Switch to night mode';
+    btn.setAttribute('aria-label', label);
+    btn.title = label + ' (N)';
+  }
+  function toggleTheme() {
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    try { localStorage.setItem('gitguide-theme', next); } catch (e) {}
+    applyTheme(next);
+  }
+  applyTheme(document.documentElement.getAttribute('data-theme') || 'light');
+  // Follow the OS setting until the user picks one explicitly
+  if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+      let saved = null; try { saved = localStorage.getItem('gitguide-theme'); } catch (err) {}
+      if (!saved) applyTheme(e.matches ? 'dark' : 'light');
+    });
+  }
+  // Keyboard shortcut: N (ignored while typing in the filter box)
+  document.addEventListener('keydown', e => {
+    if ((e.key === 'n' || e.key === 'N') && !e.ctrlKey && !e.metaKey && !e.altKey &&
+        !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) toggleTheme();
+  });
+
+  function currentButtons() {
+    return document.querySelectorAll('.nav-group[data-mode="' + mode + '"] .nav-item');
+  }
+  function buildMobileNav() {
+    const nav = document.getElementById('mobile-nav');
+    nav.innerHTML = '';
+    currentButtons().forEach(btn => {
+      const b = document.createElement('button');
+      b.textContent = btn.dataset.short;
+      b.dataset.target = btn.dataset.target;
+      b.onclick = () => show(btn.dataset.target);
+      nav.appendChild(b);
+    });
+  }
+  function show(id) {
+    const target = document.getElementById(id);
+    if (!target) return;
+    if (target.dataset.mode !== mode) { setMode(target.dataset.mode, id); return; }
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    target.classList.add('active');
+    document.querySelectorAll('.nav-item, #mobile-nav button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.target === id);
+    });
+    lastSection[mode] = id;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function setMode(m, jumpTo) {
+    mode = m;
+    try { localStorage.setItem('gitguide-mode', m); } catch (e) {}
+    document.body.classList.toggle('mode-advanced', m === 'advanced');
+    document.querySelectorAll('.mode-toggle button').forEach(b => {
+      const on = b.dataset.mode === m;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-selected', on);
+    });
+    document.querySelectorAll('.nav-group').forEach(g => g.classList.toggle('visible', g.dataset.mode === m));
+    document.getElementById('sidebar-mode').textContent = m === 'advanced' ? 'Advanced' : 'Beginner';
+    buildMobileNav();
+    show(jumpTo || lastSection[m] || firstSection[m]);
+  }
+  function filterCards(input, sectionId) {
+    const q = input.value.trim().toLowerCase();
+    const section = document.getElementById(sectionId);
+    let shown = 0;
+    section.querySelectorAll('.scenario[data-filter]').forEach(card => {
+      const hay = (card.dataset.filter + ' ' + card.querySelector('.scenario-title').textContent).toLowerCase();
+      const match = !q || q.split(/\s+/).every(w => hay.includes(w));
+      card.style.display = match ? '' : 'none';
+      if (match) shown++;
+    });
+    section.querySelector('.filter-empty').style.display = shown ? 'none' : 'block';
+  }
+  setMode(mode === 'advanced' ? 'advanced' : 'beginner');
+</script>
+</body>
+</html>
